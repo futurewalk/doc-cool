@@ -10,13 +10,13 @@ import (
 type Annotation struct {
 	Id               string
 	Url              string
-	body             map[string]interface{}
+	Body             map[string]interface{}
 	Method           string
-	respData         map[string]interface{}
+	RespData         map[string]interface{}
 	Controller       string
-	protoBufControl  string
-	respProtoBufCtrl string
-	protoBufFileName string
+	ProtoBufControl  string
+	RespProtoBufCtrl string
+	ProtoBufFileName string
 }
 type DocController struct {
 	beego.Controller

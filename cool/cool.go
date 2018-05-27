@@ -96,11 +96,11 @@ func (p *DocController) analyzeStruct(sp, rp string, flt bool) {
 			var strn = getStructName(cnt)
 			if flt {
 				for _, ant := range container.CoolDocs {
-					if ant.protoBufControl == strn {
+					if ant.ProtoBufControl == strn {
 						strcList = append(strcList, strn)
 						imports[sp] = sp
 					}
-					if ant.respProtoBufCtrl == strn {
+					if ant.RespProtoBufCtrl == strn {
 						strcList = append(strcList, strn)
 						imports[sp] = sp
 					}
@@ -249,8 +249,8 @@ func (p *DocController) dealGoFile(fp, fln string, ant *Annotation) {
 			ant = &Annotation{}
 		}
 		p.getAnnotation(cnt, ant, sfd)
-		rs := isNotNull(ant.Id, ant.Url, ant.Method, ant.protoBufFileName)
-		if rs && (ant.body != nil || ant.protoBufControl != "") {
+		rs := isNotNull(ant.Id, ant.Url, ant.Method, ant.ProtoBufFileName)
+		if rs && (ant.Body != nil || ant.ProtoBufControl != "") {
 			container.CoolDocs = append(container.CoolDocs, ant)
 		}
 	})
@@ -260,30 +260,30 @@ func (p *DocController) getAnnotation(cnt string, ant *Annotation, sfd *structFi
 	if Match(cnt, reqDataRxp) {
 		req := structs[trstr2spas(cnt, reqDataRxp)]
 		if req != nil {
-			ant.protoBufControl = reflect.TypeOf(req).Elem().Name()
+			ant.ProtoBufControl = reflect.TypeOf(req).Elem().Name()
 			t, value := p.newInstance(req)
 			sfd.reqType = t
 			sfd.reqInst = value
 		} else {
-			ant.protoBufControl = trstr2spas(cnt, reqDataRxp)
+			ant.ProtoBufControl = trstr2spas(cnt, reqDataRxp)
 		}
 	}
 	if Match(cnt, rspRxp) {
 		rsp := structs[trstr2spas(cnt, rspRxp)]
 		if rsp != nil {
 			t, value := p.newInstance(rsp)
-			ant.respProtoBufCtrl = reflect.TypeOf(rsp).Elem().Name()
+			ant.RespProtoBufCtrl = reflect.TypeOf(rsp).Elem().Name()
 			sfd.rspType = t
 			sfd.rspInst = value
 		} else {
-			ant.respProtoBufCtrl = trstr2spas(cnt, rspRxp)
+			ant.RespProtoBufCtrl = trstr2spas(cnt, rspRxp)
 		}
 	}
 	if Match(cnt, reqFileRxp) {
-		ant.protoBufFileName = trstr2spas(cnt, reqFileRxp)
+		ant.ProtoBufFileName = trstr2spas(cnt, reqFileRxp)
 	}
 	if Match(cnt, rspFileRxp) {
-		ant.respProtoBufCtrl = trstr2spas(cnt, rspFileRxp)
+		ant.RespProtoBufCtrl = trstr2spas(cnt, rspFileRxp)
 	}
 
 	if Match(cnt, methodRxp) {
@@ -299,7 +299,7 @@ func (p *DocController) getAnnotation(cnt string, ant *Annotation, sfd *structFi
 		rc := make(map[string]interface{})
 		sfd.container = rc
 		p.getFields(sfd)
-		ant.body = rc
+		ant.Body = rc
 	}
 
 	/*if sfd.rspType != nil {
@@ -404,7 +404,7 @@ func (p *DocController) createRouter() {
 
 	docs := container.CoolDocs
 	for _, value := range docs {
-		log.Println(value.Url)
+		log.Println(value)
 		beego.Router(value.Url, structs[value.Controller].(beego.ControllerInterface), value.Method)
 	}
 	beego.Router("/coolDocument/createDocument", p, "*:CreateDocument")
