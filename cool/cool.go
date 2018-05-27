@@ -92,7 +92,7 @@ func (p *DocController) analyzeStruct(sp, rp string, flt bool) {
 		if Match(cnt, goPackageRxp) {
 			pkn = trim(trimSpace(cnt), goFilePackage)
 		}
-		if Match(cnt, goType) {
+		if Match(cnt, structRxp) {
 			var strn = getStructName(cnt)
 			if flt {
 				for _, ant := range container.CoolDocs {
