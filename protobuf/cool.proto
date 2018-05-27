@@ -1,0 +1,16 @@
+syntax = "proto2";
+package protobuf;
+
+
+message Request {
+    optional int32 operationType = 1;
+    optional bytes data = 2;
+}
+
+
+message Response {
+    optional int32 operationType = 1;
+    optional int32 code = 2;
+    optional string msg = 3;
+    optional bytes data = 4;
+}
