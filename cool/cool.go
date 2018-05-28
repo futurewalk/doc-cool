@@ -234,7 +234,7 @@ func (p *DocController) dealGoFile(fp, fln string, ant *Annotation) {
 		ext = structs["Extension"].(Extension)
 		sfd.ext = ext
 	}
-	p.readFile(fp+"\\"+fln, func(cnt string) {
+	readFunc := func(cnt string) {
 		if Match(cnt, structRxp) && !hasGetCtrl {
 			ctrl = getStructName(cnt)
 			hasGetCtrl = true
@@ -253,7 +253,8 @@ func (p *DocController) dealGoFile(fp, fln string, ant *Annotation) {
 		if rs && (ant.Body != nil || ant.ProtoBufControl != "") {
 			container.CoolDocs = append(container.CoolDocs, ant)
 		}
-	})
+	}
+	p.readFile(fp+"\\"+fln, readFunc)
 }
 
 func (p *DocController) getAnnotation(cnt string, ant *Annotation, sfd *structField) *Annotation {
@@ -404,7 +405,7 @@ func (p *DocController) createRouter() {
 
 	docs := container.CoolDocs
 	for _, value := range docs {
-		log.Println(value)
+		log.Println(value.Url)
 		beego.Router(value.Url, structs[value.Controller].(beego.ControllerInterface), value.Method)
 	}
 	beego.Router("/coolDocument/createDocument", p, "*:CreateDocument")
