@@ -8,45 +8,60 @@ import (
 	"fmt"
 	"bytes"
 	"github.com/astaxie/beego/context"
+	"runtime"
 )
 
 const (
+	ostype              = runtime.GOOS
 	funcRxp             = `(?i:^fun).*(){`
-	reqDataRxp          = "//@ReqData"
-	rspRxp              = "//@RespData"
-	reqFileRxp          = "//@ReqProtoFile"
-	rspFileRxp          = "//@RespProtoFile"
-	methodRxp           = "//@Method"
-	coolUrlRxp          = "//@Url"
+	reqDataRxp          = `//@ReqData`
+	rspRxp              = `//@RespData`
+	reqFileRxp          = `//@ReqProtoFile`
+	rspFileRxp          = `//@RespProtoFile`
+	methodRxp           = `//@Method`
+	coolUrlRxp          = `//@Url`
 	proGoFileRxp        = `(?i:^[a-z]).*pb.go`
 	proFileRxp          = `(?i:^[a-z]).*.proto`
 	pathDotRxp          = `(?i:^./).*`
 	ptrFuncRxp          = `(?i:^func).*`
-	methodEndCloseRxp   = "()"
+	methodEndCloseRxp   = `()`
 	structRxp           = `(?i:^type).*struct {`
 	goPackageRxp        = `(?i:^package).*`
-	goType              = "type"
-	goStruct            = "struct"
-	goFilePackage       = "package"
-	leftBrace           = "{"
-	rightBrace          = "}"
-	defaultGeneratePath = "./protobuf/cool"
-	generateGoFile      = "/coolPad_doc.go"
-	generatePackage     = "package protobufCool"
-	coolPackage         = "github.com/futurewalk/doc-cool/cool"
-	coolContainer       = "    container := make(map[string]interface{})"
-	coolStartMethod     = "    cool.Start(container)"
+	goType              = `type`
+	goStruct            = `struct`
+	goFilePackage       = `package`
+	leftBrace           = `{`
+	rightBrace          = `}`
+	defaultGeneratePath = `./protobuf/cool`
+	generateGoFile      = `/coolPad_doc.go`
+	generatePackage     = `package protobuf_cool`
+	coolPackage         = `github.com/futurewalk/doc-cool/cool`
+	coolContainer       = `    container := make(map[string]interface{})`
+	coolStartMethod     = `    cool.Start(container)`
 	newLine             = "\n"
-	initMethod          = "func init() {"
-	backSlash           = "/"
-	importStr           = "import "
-	src                 = "\\src\\"
-	oneQuoMark          = "\""
-	resolverInit        = "    container[\"Extension\"] = &Resolver{} "
-	resolverStruct      = "type Resolver struct{}"
-	invokeMethod        = "func (p *Resolver) Invoke(plugin *cool.Plugin) {"
-	separator = "\\"
+	initMethod          = `func init() {`
+	backSlash           = `/`
+	importStr           = `import `
+	oneQuoMark          = `"`
+	resolverInit        = `    container["Extension"] = &Resolver{} `
+	resolverStruct      = `type Resolver struct{}`
+	invokeMethod        = `func (p *Resolver) Invoke(plugin *cool.Plugin) {`
 )
+
+var (
+	src       = `\src\`
+	separator = `\`
+)
+
+func fs() {
+	if ostype == "linux" {
+		src = `/src/`
+		separator = `/`
+	}
+}
+func init() {
+	fs()
+}
 
 //regexp match this string
 func Match(content string, regexps string) bool {
@@ -93,8 +108,9 @@ func (sb *StringBuilder) Append(str string) *StringBuilder {
 	return sb
 }
 func getImportPath(path string) string {
+
 	arrayStr := strings.Split(path, src)
-	importPath := strings.Replace(arrayStr[1], "\\", backSlash, -1)
+	importPath := strings.Replace(arrayStr[1], separator, backSlash, -1)
 	return importPath
 }
 func getStructName(content string) string {
@@ -114,7 +130,16 @@ func getProPath(path string) string {
 	}
 	return path
 }
+func filterPath(path string) string {
+	if strings.Index(path, ".") > -1 {
+		path = strings.Replace(path, ".", "/", -1)
+	}
+	return path
+}
 func getGeneratePk(value string) string {
+	if strings.Index(value, ".") > -1 {
+		value = strings.Replace(value, ".", "_", -1)
+	}
 	return strings.Replace(value, "/", "_", -1)
 }
 func GetIgnoreFile(files string) {
@@ -124,7 +149,7 @@ func GetIgnoreFile(files string) {
 	}
 }
 func sliceType(sn string) string {
-	if !strings.Contains(sn,"."){
+	if !strings.Contains(sn, ".") {
 		return ""
 	}
 	arr := strings.Split(sn, ".")
@@ -133,10 +158,14 @@ func sliceType(sn string) string {
 	}
 	return ""
 }
-
+func subLst(s, p string) string {
+	lst := strings.LastIndex(s, p)
+	s = string([]byte(s)[lst+1:])
+	return s
+}
 
 func Access(ctx *context.Context) {
-	ctx.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")    //允许访问源
+	ctx.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")                        //允许访问源
 	ctx.ResponseWriter.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS") //允许post访问
 	ctx.ResponseWriter.Header().Set("Access-Control-Allow-Headers", "*")                       //header的类型
 	ctx.ResponseWriter.Header().Set("Access-Control-Max-Age", "1728000")

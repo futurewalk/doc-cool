@@ -26,7 +26,6 @@ var (
 func Export() {
 	var doc DocController
 	doc.getControllers("./controllers/")
-	log.Println(beego.AppConfig.String("cool.protoPath"))
 	doc.scanProtoBuf(getProPath(beego.AppConfig.String("cool.protoPath")))
 	doc.generateProtoBufGoFile()
 	container = new(Container)
@@ -82,14 +81,18 @@ func (p *DocController) getProtoBuf(sp, rp string) {
 }
 func (p *DocController) analyzeStruct(sp, rp string, flt bool) {
 	var (
-		pfc      ProtoFileContainer
-		strcList [] string
-		pkn      = ""
-		readPath = sp + separator+ rp
+		pfc          ProtoFileContainer
+		strcList     [] string
+		pkn          = ""
+		readPath     = sp + separator + rp
+		isSelfPackage = false
 	)
+	if subLst(sp, separator) == beego.AppConfig.String("cool.generatePath") {
+		isSelfPackage = true
+	}
 	p.readFile(readPath, func(cnt string) {
 
-		if Match(cnt, goPackageRxp) {
+		if Match(cnt, goPackageRxp) && !isSelfPackage{
 			pkn = trim(trimSpace(cnt), goFilePackage)
 		}
 		if Match(cnt, structRxp) {
@@ -152,8 +155,8 @@ func (p *DocController) generateProtoBufGoFile() error {
 		gnPk   = generatePackage
 	)
 	if beego.AppConfig.String("cool.generatePath") != "" {
-		goFile = beego.AppConfig.String("cool.generatePath") + generateGoFile
-		gnDir = beego.AppConfig.String("cool.generatePath")
+		gnDir = filterPath(beego.AppConfig.String("cool.generatePath"))
+		goFile = gnDir + generateGoFile
 		gnPk = goFilePackage + " " + getGeneratePk(beego.AppConfig.String("cool.generatePath"))
 	}
 	if !isExist(gnDir) {
@@ -173,19 +176,18 @@ func (p *DocController) generateProtoBufGoFile() error {
 
 		write(w, importStr+oneQuoMark+coolPackage+oneQuoMark)
 
-		i := 0
 		for _, v := range imports {
 			if v == "" {
 				continue
 			}
-			if i == len(imports)-1 {
-				writeLine(w, importStr+oneQuoMark+getImportPath(v)+oneQuoMark)
-			} else {
-				write(w, importStr+oneQuoMark+getImportPath(v)+oneQuoMark)
+			if subLst(v, separator) == gnDir {
+				continue
 			}
+			imp := importStr + oneQuoMark + getImportPath(v) + oneQuoMark
+			write(w, imp)
 
-			i++
 		}
+		write(w, "\n")
 
 		write(w, initMethod)
 		write(w, coolContainer)
@@ -215,8 +217,12 @@ func (p *DocController) generateStruct(w io.Writer, ctn ProtoFileContainer, pk s
 	for _, value := range sts {
 		var sb StringBuilder
 		if temps[value] == "" {
-			sb.Append("    container").Append("[").Append(oneQuoMark).Append(value).Append(oneQuoMark).Append("]").Append("= ")
-			sb.Append("&").Append(pk).Append(".").Append(value).Append(leftBrace).Append(rightBrace)
+			sb.Append("    container").Append("[").Append(oneQuoMark)
+			sb.Append(value).Append(oneQuoMark).Append("]").Append("= ").Append("&")
+			if isNotNull(pk){
+				sb.Append(pk).Append(".")
+			}
+			sb.Append(value).Append(leftBrace).Append(rightBrace)
 			write(w, sb.String())
 		}
 		temps[value] = value
@@ -250,12 +256,11 @@ func (p *DocController) dealGoFile(fp, fln string, ant *Annotation) {
 		}
 		p.getAnnotation(cnt, ant, sfd)
 		rs := isNotNull(ant.Id, ant.Url, ant.Method, ant.ProtoBufFileName)
-		log.Println(rs,ant)
 		if rs && (ant.Body != nil || ant.ProtoBufControl != "") {
 			container.CoolDocs = append(container.CoolDocs, ant)
 		}
 	}
-	p.readFile(fp + separator + fln, readFunc)
+	p.readFile(fp+separator+fln, readFunc)
 }
 
 func (p *DocController) getAnnotation(cnt string, ant *Annotation, sfd *structField) *Annotation {
@@ -346,23 +351,26 @@ func (p *DocController) getFields(sfd *structField) map[string]interface{} {
 		}
 		ext.Invoke(plugin)
 		if plugin.swapStruct != nil {
-			c[rt.Field(i).Name] = p.recursion(plugin.swapStruct, ext, url)
+			st, sv := p.newInstance(plugin.swapStruct)
+			newStf := getStructField(url, ext, st, sv)
+			//c[rt.Field(i).Name] = p.recursion(plugin.swapStruct, ext, url)
+			c[rt.Field(i).Name] = p.getFields(newStf)
 			continue
 		}
 		if field.Kind() == reflect.Slice {
 			slp := sliceType(field.Type().String())
-			if structs[slp] == nil{
+			if structs[slp] == nil {
 				continue
 			}
-			t,v := p.newInstance(structs[slp])
-			newStf := getStructField(url,ext,t,v)
+			t, v := p.newInstance(structs[slp])
+			newStf := getStructField(url, ext, t, v)
 			c[rt.Field(i).Name] = p.getFields(newStf)
 			continue
 		}
 
 		if _, ok := field.Interface().(proto.Message); ok {
 			tv := field.Type().Elem()
-			newStf := getStructField(url,ext,tv,reflect.New(tv).Elem())
+			newStf := getStructField(url, ext, tv, reflect.New(tv).Elem())
 			c[rt.Field(i).Name] = p.getFields(newStf)
 		}
 	}
@@ -370,14 +378,14 @@ func (p *DocController) getFields(sfd *structField) map[string]interface{} {
 }
 func (p *DocController) recursion(cls interface{}, ext Extension, url string) map[string]interface{} {
 	dm := make(map[string]interface{})
+	t, v := p.newInstance(cls)
 	if _, ok := cls.(proto.Message); ok {
-		t, v := p.newInstance(cls)
-		newStf := getStructField(url,ext,t,v)
+		newStf := getStructField(url, ext, t, v)
 		p.getFields(newStf)
 	}
 	return dm
 }
-func getStructField(url string,ext Extension,t reflect.Type,value reflect.Value) *structField {
+func getStructField(url string, ext Extension, t reflect.Type, value reflect.Value) *structField {
 	dm := make(map[string]interface{})
 	newStf := &structField{
 		url:       url,
