@@ -1,6 +1,10 @@
 # doc-cool
 1、基于beego支持protobuf的自动化文档管理工具
 
+- 下载安装
+  
+  `go get -t github.com/futurewalk/doc-cool/cool`
+
 - 使用注解
   
       //@ReqData ExampleMessageReq
@@ -47,9 +51,9 @@
         cool.Export()
       }
 - 初始化doc-cool
-  ######项目启动时初始化
+
       package main
-      
+      //项目启动时初始化
       import (
           "github.com/astaxie/beego"
           _"example/protobuf/cool"//初始化doc-cool,只有初始化才能生成路由
