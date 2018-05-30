@@ -85,7 +85,7 @@ func (p *DocController) analyzeStruct(sp, rp string, flt bool) {
 		pfc      ProtoFileContainer
 		strcList [] string
 		pkn      = ""
-		readPath = sp + "\\" + rp
+		readPath = sp + separator+ rp
 	)
 	p.readFile(readPath, func(cnt string) {
 
@@ -250,11 +250,12 @@ func (p *DocController) dealGoFile(fp, fln string, ant *Annotation) {
 		}
 		p.getAnnotation(cnt, ant, sfd)
 		rs := isNotNull(ant.Id, ant.Url, ant.Method, ant.ProtoBufFileName)
+		log.Println(rs,ant)
 		if rs && (ant.Body != nil || ant.ProtoBufControl != "") {
 			container.CoolDocs = append(container.CoolDocs, ant)
 		}
 	}
-	p.readFile(fp+"\\"+fln, readFunc)
+	p.readFile(fp + separator + fln, readFunc)
 }
 
 func (p *DocController) getAnnotation(cnt string, ant *Annotation, sfd *structField) *Annotation {
@@ -346,21 +347,22 @@ func (p *DocController) getFields(sfd *structField) map[string]interface{} {
 		ext.Invoke(plugin)
 		if plugin.swapStruct != nil {
 			c[rt.Field(i).Name] = p.recursion(plugin.swapStruct, ext, url)
+			continue
 		}
-		if plugin.FieldName == "" {
-			delete(c, rt.Field(i).Name)
+		if field.Kind() == reflect.Slice {
+			slp := sliceType(field.Type().String())
+			if structs[slp] == nil{
+				continue
+			}
+			t,v := p.newInstance(structs[slp])
+			newStf := getStructField(url,ext,t,v)
+			c[rt.Field(i).Name] = p.getFields(newStf)
+			continue
 		}
 
 		if _, ok := field.Interface().(proto.Message); ok {
 			tv := field.Type().Elem()
-			m := make(map[string]interface{})
-			newStf := &structField{
-				url:       url,
-				ext:       ext,
-				reqInst:   reflect.New(tv).Elem(),
-				reqType:   tv,
-				container: m,
-			}
+			newStf := getStructField(url,ext,tv,reflect.New(tv).Elem())
 			c[rt.Field(i).Name] = p.getFields(newStf)
 		}
 	}
@@ -370,16 +372,21 @@ func (p *DocController) recursion(cls interface{}, ext Extension, url string) ma
 	dm := make(map[string]interface{})
 	if _, ok := cls.(proto.Message); ok {
 		t, v := p.newInstance(cls)
-		newStf := &structField{
-			url:       url,
-			ext:       ext,
-			reqInst:   v,
-			reqType:   t,
-			container: dm,
-		}
+		newStf := getStructField(url,ext,t,v)
 		p.getFields(newStf)
 	}
 	return dm
+}
+func getStructField(url string,ext Extension,t reflect.Type,value reflect.Value) *structField {
+	dm := make(map[string]interface{})
+	newStf := &structField{
+		url:       url,
+		ext:       ext,
+		reqInst:   value,
+		reqType:   t,
+		container: dm,
+	}
+	return newStf
 }
 func (p *DocController) CreateDocument() {
 	docs := container.CoolDocs
@@ -415,6 +422,7 @@ func Start(c map[string]interface{}) {
 	structs = c
 	var doc DocController
 	doc.getControllers("./controllers/")
+	log.Println("doc-cool starting ...... ")
 	GetIgnoreFile(beego.AppConfig.String("cool.ignoreFile"))
 	doc.scanProtoBuf(getProPath(beego.AppConfig.String("cool.protoPath")))
 	doc.createRouter()

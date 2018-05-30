@@ -37,7 +37,7 @@ const (
 	coolContainer       = "    container := make(map[string]interface{})"
 	coolStartMethod     = "    cool.Start(container)"
 	newLine             = "\n"
-	initMethod          = "func Init() {"
+	initMethod          = "func init() {"
 	backSlash           = "/"
 	importStr           = "import "
 	src                 = "\\src\\"
@@ -45,6 +45,7 @@ const (
 	resolverInit        = "    container[\"Extension\"] = &Resolver{} "
 	resolverStruct      = "type Resolver struct{}"
 	invokeMethod        = "func (p *Resolver) Invoke(plugin *cool.Plugin) {"
+	separator = "\\"
 )
 
 //regexp match this string
@@ -122,6 +123,17 @@ func GetIgnoreFile(files string) {
 		ignoreFile[value] = value
 	}
 }
+func sliceType(sn string) string {
+	if !strings.Contains(sn,"."){
+		return ""
+	}
+	arr := strings.Split(sn, ".")
+	if len(arr) > 0 {
+		return arr[1]
+	}
+	return ""
+}
+
 
 func Access(ctx *context.Context) {
 	ctx.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")    //允许访问源
