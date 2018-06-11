@@ -37,7 +37,7 @@ const (
     defaultGeneratePath = `./protobuf/cool`
     generateGoFile      = `/doc_cool_register.go`
     generatePackage     = `package protobuf_cool`
-    coolPackage         = `doc-cool/cool`
+    coolPackage         = `github.com/futurewalk/doc-cool/cool`
     coolStartMethod     = `    cool.Register(`
     newLine             = "\r"
     initMethod          = `func init() {`
