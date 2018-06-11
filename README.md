@@ -42,8 +42,6 @@
   >`cool.ignoreFile = push.proto`//需要忽略扫描的protobuf文件  
   
 - 生成初始化入口和结构体注册文件
- 
-  ``这里的test一定要在根目录，否则无法扫描到controller和对应的proto``
 
   ```go
   
@@ -214,10 +212,6 @@
   如有问题，请联系:wangdequan2829@qq.com。
 
 3、你可能会遇到的几个问题
-  
-  + 无法生成注册文件
-      
-      1、生成注册文件的test要在根目录，否则无法找到对应的包  
   
   + 项目启动之后无法找到proto文件
     

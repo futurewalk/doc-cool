@@ -9,6 +9,7 @@ import (
     "bytes"
     "github.com/astaxie/beego/context"
     "runtime"
+    "path/filepath"
 )
 
 const (
@@ -23,7 +24,7 @@ const (
     descriptionRxp      = `//@Description`
     proGoFileRxp        = `(?i:^[a-z]).*pb.go`
     proFileRxp          = `(?i:^[a-z]).*.proto`
-    pathDotRxp          = `(?i:^./).*`
+    coolConfigRxp       = `(?i:^cool.).*`
     ptrFuncRxp          = `(?i:^func).*`
     methodEndCloseRxp   = `()`
     structRxp           = `(?i:^type).*struct {`
@@ -36,15 +37,12 @@ const (
     defaultGeneratePath = `./protobuf/cool`
     generateGoFile      = `/doc_cool_register.go`
     generatePackage     = `package protobuf_cool`
-    coolPackage         = `github.com/futurewalk/doc-cool/cool`
-    coolContainer       = `    container := make(map[string]interface{})`
-    coolStartMethod     = `    cool.Start(container)`
-    newLine             = "\n"
+    coolPackage         = `doc-cool/cool`
+    coolStartMethod     = `    cool.Register(`
+    newLine             = "\r"
     initMethod          = `func init() {`
-    backSlash           = `/`
     importStr           = `import `
     oneQuoMark          = `"`
-    resolverInit        = `    container["Extension"] = &Resolver{} `
     resolverStruct      = `type Resolver struct{}`
     invokeMethod        = `func (p *Resolver) Invoke(plugin *cool.Plugin) {`
 )
@@ -111,7 +109,7 @@ func (sb *StringBuilder) Append(str string) *StringBuilder {
 func getImportPath(path string) string {
 
     arrayStr := strings.Split(path, src)
-    importPath := strings.Replace(arrayStr[1], separator, backSlash, -1)
+    importPath := strings.Replace(arrayStr[1], separator, "/", -1)
     return importPath
 }
 func getStructName(content string) string {
@@ -126,10 +124,7 @@ func isNotNull(values ...string) bool {
     return true
 }
 func getProPath(path string) string {
-    if !Match(path, pathDotRxp) {
-        return "./" + path
-    }
-    return path
+    return getPath(path)
 }
 func filterPath(path string) string {
     if strings.Index(path, ".") > -1 {
@@ -145,8 +140,11 @@ func getGeneratePk(value string) string {
 }
 func GetIgnoreFile(files string) {
     arr := strings.Split(files, ",")
+    if container.structures.IgnoreFile == nil{
+        container.structures.IgnoreFile = make(map[string]string)
+    }
     for _, value := range arr {
-        ignoreFile[value] = value
+        container.structures.IgnoreFile[value] = value
     }
 }
 func sliceType(sn string) string {
@@ -167,6 +165,26 @@ func subLst(s, p string) string {
 func getIndexStr(s, p string, index int) string {
     arr := strings.Split(s, p)
     return arr[index]
+}
+func getPath(dir string) string {
+    if _, err := filepath.Abs(filepath.Dir(os.Args[0])); err != nil {
+        panic(err)
+    }
+    workPath, err := os.Getwd()
+
+    if err != nil {
+        panic(err)
+    }
+
+    paths := strings.Split(workPath, src)
+
+    return paths[0] + src + getRootPath(paths[1]) + dir
+}
+func getRootPath(dir string) string {
+    if strings.Index(dir, separator) > - 1 {
+        return dir[:strings.Index(dir, separator)]
+    }
+    return dir
 }
 
 func Access(ctx *context.Context) {
