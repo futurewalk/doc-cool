@@ -119,8 +119,8 @@ func (b *Base) GenerateRegisterGoFile() error {
     )
 
     if container.config.Get("cool.generatePath") != "" {
-        gnDir = filterPath(container.config.Get("cool.generatePath"))
-        goFile = gnDir + generateGoFile
+        gnDir = getPath(separator + filterPath(container.config.Get("cool.generatePath")))
+        goFile = gnDir + separator + generateGoFile
         gnPk = goFilePackage + " " + getGeneratePk(container.config.Get("cool.generatePath"))
     }
     if !isExist(gnDir) {
@@ -132,44 +132,47 @@ func (b *Base) GenerateRegisterGoFile() error {
     }
     fs, err1 := os.Create(goFile)
 
+    if err1 != nil {
+        return err1
+    }
+
     defer fs.Close()
 
-    if err1 == nil {
-        w := bufio.NewWriter(fs)
-        writeLine(w, gnPk)
+    w := bufio.NewWriter(fs)
+    writeLine(w, gnPk)
 
-        write(w, importStr+oneQuoMark+coolPackage+oneQuoMark)
+    write(w, importStr+oneQuoMark+coolPackage+oneQuoMark)
 
-        for _, v := range container.structures.ImportList {
-            if v == "" {
-                continue
-            }
-            if subLst(v, separator) == gnDir {
-                continue
-            }
-            imp := importStr + oneQuoMark + getImportPath(v) + oneQuoMark
-            write(w, imp)
-
+    for _, v := range container.structures.ImportList {
+        if v == "" {
+            continue
         }
-        write(w, "\n")
-
-        write(w, initMethod)
-
-        writeLine(w, coolStartMethod)
-        writeLine(w, "        &Resolver{},")
-        for key, vp := range container.structures.StructureContainer {
-            for _, v := range vp {
-                b.GenerateStructure(w, v, key)
-            }
+        if subLst(v, separator) == gnDir {
+            continue
         }
-        writeLine(w, "    )")
-        writeLine(w, rightBrace)
-        writeLine(w, resolverStruct)
-        write(w, invokeMethod)
-        write(w, rightBrace)
+        imp := importStr + oneQuoMark + getImportPath(v) + oneQuoMark
+        write(w, imp)
 
-        w.Flush()
     }
+    write(w, "\n")
+
+    write(w, initMethod)
+
+    writeLine(w, coolStartMethod)
+    writeLine(w, "        &Resolver{},")
+    for key, vp := range container.structures.StructureContainer {
+        for _, v := range vp {
+            b.GenerateStructure(w, v, key)
+        }
+    }
+    writeLine(w, "    )")
+    writeLine(w, rightBrace)
+    writeLine(w, resolverStruct)
+    write(w, invokeMethod)
+    write(w, rightBrace)
+
+    w.Flush()
+
     return nil
 }
 

@@ -14,6 +14,7 @@
   //@ReqProtoFile example.proto
   //@Method *:DocCool
   //@Url /v1/example/DocCool
+  //@Description 支持bytes数据类型方式1
   func (p *ExampleController) DocCool() {
       reqData := &protobuf.ExampleMessageReq{}
       rspData := &protobuf.ExampleReqMessageRsp{}
@@ -32,7 +33,8 @@
    `2、//@RespData ExampleReqMessageRsp：返回的protobuf结构体名`          
    `3、//@ReqProtoFile example.proto：请求protobuf结构体所在的protobuf文件`  
    `4、//@Method *:DocCool：controller层对应的请求方法(这里完成支持beego)`  
-   `5、//@Url /v1/example/DocCool：请求的url`   
+   `5、//@Url /v1/example/DocCool：请求的url`
+   `6、//@Description 支持bytes数据类型方式1`   
   
 - conf文件配置
   >`cool.protoPath = protobuf ` //protobuf的根目录   
@@ -75,7 +77,7 @@
            |--js
         |-- extend
            |-- extend.js //扩展js
-        |-- protobuf //存放proto文件包
+        |-- proto //存放proto文件包
            |-- example.proto 
         |-- favicon.ico
         |-- index.html
@@ -102,7 +104,7 @@
          
 2、 bytes数据类型支持（由于bytes数据类型比较特殊，所以需要对doc-cool进行扩展，框架提供了扩展方式,这里对三层的包装类型进行扩展，注:只支持到三层） 
      
-+ 如一下的proto message结构为
++ 如以下的proto message结构为
   
   ```proto
   //请求的message

@@ -35,7 +35,7 @@ const (
     leftBrace           = `{`
     rightBrace          = `}`
     defaultGeneratePath = `./protobuf/cool`
-    generateGoFile      = `/doc_cool_register.go`
+    generateGoFile      = `doc_cool_register.go`
     generatePackage     = `package protobuf_cool`
     coolPackage         = `github.com/futurewalk/doc-cool/cool`
     coolStartMethod     = `    cool.Register(`
@@ -128,7 +128,7 @@ func getProPath(path string) string {
 }
 func filterPath(path string) string {
     if strings.Index(path, ".") > -1 {
-        path = strings.Replace(path, ".", "/", -1)
+        path = strings.Replace(path, ".", separator, -1)
     }
     return path
 }
