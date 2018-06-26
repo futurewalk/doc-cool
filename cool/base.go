@@ -6,6 +6,7 @@ import (
     "io"
     "reflect"
     "github.com/golang/protobuf/proto"
+    "io/ioutil"
 )
 
 type Baser interface {
@@ -18,10 +19,9 @@ type Baser interface {
     //generate struct, include controller struct and proto struct
     GenerateStructure(w io.Writer, ptc StructureContainer, pk string) error
     //generate cool register file
-    GenerateRegisterGoFile() error
+    GenerateRegisterGoFile() error//
 }
-type Base struct {
-}
+type Base struct {}
 
 func (b *Base) Walk(fp string, fc func(cnt string)) error {
     f, err := os.Open(fp)
@@ -41,6 +41,17 @@ func (b *Base) Walk(fp string, fc func(cnt string)) error {
         }
     }
     return nil
+}
+func (b *Base) WalkAll(fp string, fc func(cnt string)) error {
+    f, err := os.Open(fp)
+    if err != nil {
+        return err
+    }
+    defer f.Close()
+
+    content,err := ioutil.ReadAll(f)
+    fc(string(content[:]))
+    return err
 }
 func (b *Base) GetFields(sfd *structField) map[string]interface{} {
     var (
@@ -86,7 +97,6 @@ func (b *Base) GetFields(sfd *structField) map[string]interface{} {
             c[rt.Field(i).Name] = b.GetFields(newStf)
             continue
         }
-
         if _, ok := field.Interface().(proto.Message); ok {
             tv := field.Type().Elem()
             newStf := b.GetStructField(url, ext, tv, reflect.New(tv).Elem())

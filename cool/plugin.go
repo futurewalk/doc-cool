@@ -1,6 +1,8 @@
 package cool
 
-import "github.com/golang/protobuf/proto"
+import (
+    "github.com/golang/protobuf/proto"
+)
 
 type Plugin struct {
     StructureName string

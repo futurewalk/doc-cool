@@ -8,7 +8,7 @@ type Architecture interface {
     CreateRouter()
     AnalyzeStructure(sp, rp string, flt bool) error
     GetControlStructure(path string) error
-    ScanProtoStructure(path string)
+    ScanProtoStructure(path string) error
     GetProtoStructure(sp, rp string) error
 }
 type Structures struct {
@@ -27,9 +27,13 @@ type StructureContainer struct {
 func (s *Structures) CreateRouter() {
 
 }
-func (s *Structures) ScanProtoStructure(path string) {
+func (s *Structures) ScanProtoStructure(path string) error {
 
-    fileList, _ := ioutil.ReadDir(path)
+    fileList, err := ioutil.ReadDir(path)
+
+    if err != nil {
+        return err
+    }
 
     if s.IgnoreFile == nil {
         s.IgnoreFile = make(map[string]string)
@@ -49,6 +53,7 @@ func (s *Structures) ScanProtoStructure(path string) {
             }
         }
     }
+    return nil
 }
 func (s *Structures) GetProtoStructure(sp, rp string) error {
     if Match(rp, proFileRxp) {
@@ -66,7 +71,7 @@ func (s *Structures) GetProtoStructure(sp, rp string) error {
 func (s *Structures) AnalyzeStructure(sp, rp string, flt bool) error {
     var (
         stc           StructureContainer
-        structureList [] string
+        structureList []string
         pkn           = ""
         readPath      = sp + separator + rp
         isSelfPackage = false
@@ -75,8 +80,7 @@ func (s *Structures) AnalyzeStructure(sp, rp string, flt bool) error {
     if subLst(sp, separator) == container.config.Get("cool.generatePath") {
         isSelfPackage = true
     }
-    err := s.Walk(readPath, func(cnt string) {
-
+    readCallBack := func(cnt string) {
         if Match(cnt, goPackageRxp) && !isSelfPackage {
             pkn = trim(trimSpace(cnt), goFilePackage)
         }
@@ -98,7 +102,9 @@ func (s *Structures) AnalyzeStructure(sp, rp string, flt bool) error {
                 s.ImportList[sp] = sp
             }
         }
-    })
+    }
+    err := s.Walk(readPath, readCallBack)
+
     if err != nil {
         return err
     }

@@ -1,19 +1,25 @@
 package cool
 
-import "strings"
+import (
+    "strings"
+    "path/filepath"
+    "os"
+    "fmt"
+)
 
 type Configuration interface {
     Set(k, v string)
     Get(key string) string
     LoadConfig(path string) error
     GetIgnoreFile(files string)
+    ShowBanner()
 }
 
 type Config struct {
     key   string
     value string
     Data  map[string]string
-    Base
+    Structures
 }
 
 func (cfg *Config) Set(k, v string) {
@@ -55,11 +61,23 @@ func (cfg *Config) LoadConfig(path string) error {
         return err
     }
 
-    stucture.ScanProtoStructure(getPath(separator + cfg.Get("cool.protoPath")))
+    err = stucture.ScanProtoStructure(getPath(separator + cfg.Get("cool.protoPath")))
+
+    if err != nil {
+        return err
+    }
 
     container.structures = stucture
 
-    return err
+    return nil
+}
+func (cfg *Config) ShowBanner() {
+    ex, err := os.Executable()
+    if err != nil {
+        panic(err)
+    }
+    exPath := filepath.Dir(ex)
+    fmt.Println(exPath)
 }
 func (cfg *Config) GetIgnoreFile(files string) {
     arr := strings.Split(files, ",")

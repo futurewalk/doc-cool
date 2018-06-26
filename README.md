@@ -32,9 +32,9 @@
    `1、//@ReqData ExampleMessageReq：请求的protobuf结构体名 `   
    `2、//@RespData ExampleReqMessageRsp：返回的protobuf结构体名`          
    `3、//@ReqProtoFile example.proto：请求protobuf结构体所在的protobuf文件`  
-   `4、//@Method *:DocCool：controller层对应的请求方法(这里完成支持beego)`  
+   `4、//@Method *:DocCool：controller层对应的请求方法(这里完全支持beego)`  
    `5、//@Url /v1/example/DocCool：请求的url`
-   `6、//@Description 支持bytes数据类型方式1`   
+   `6、//@Description :描述`   
   
 - conf文件配置
   >`cool.protoPath = protobuf ` //protobuf的根目录   
@@ -82,7 +82,7 @@
         |-- favicon.ico
         |-- index.html
      ```    
-+ 把项目中用到的proto文件放在static/protobuf包下
++ 把项目中用到的proto文件放在static/proto包下
     
 - 初始化doc-cool并启动项目(项目启动成功通过http://host:port/static可进行访问)
      
@@ -219,7 +219,7 @@
     
     1、cool.protoPackage = protobuf 配置和proto文件的package不一致
    
-    2、用到的proto文件没有拷贝的static/protobuf包下
+    2、用到的proto文件没有拷贝的static/proto包下
   
   + 项目启动成功，访问不到，报404
   

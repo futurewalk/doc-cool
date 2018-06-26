@@ -1,8 +1,8 @@
 package cool
 
 import (
-    "strings"
     "reflect"
+    "strings"
 )
 
 type Annotation struct {
@@ -30,14 +30,12 @@ type structField struct {
 type Ants map[string]*Annotation
 
 type Ant struct {
-
     Ants
     //extend baser ,it will have all baser interface api
     Base
 }
 
 type Annotator interface {
-
     //extend baser ,it will have all baser interface api
     Baser
 
@@ -50,7 +48,7 @@ type Annotator interface {
     AnalyzeAnnotation(cnt string, ant *Annotation, sfd *structField) *Annotation
 }
 
-func (at *Ant) AnalyzeController(fp, fn string, ant *Annotation) error{
+func (at *Ant) AnalyzeController(fp, fn string, ant *Annotation) error {
     var (
         ctrl       string
         hasGetCtrl = false
@@ -62,7 +60,7 @@ func (at *Ant) AnalyzeController(fp, fn string, ant *Annotation) error{
         sfd.ext = ext
     }
 
-    if at.Ants == nil{
+    if at.Ants == nil {
         at.Ants = make(map[string]*Annotation)
     }
 
